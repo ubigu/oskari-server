@@ -1,0 +1,23 @@
+name: Publish package to GitHub Packages
+on:
+  push:
+   branches:
+     - 'master'
+     - 'main'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name:
+        run: mvn --batch-mode dependency:resolve dependency:resolve-plugins
