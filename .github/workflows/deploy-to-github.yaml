@@ -19,6 +19,6 @@ jobs:
       - name: Force version
         run: mvn --no-transfer-progress --batch-mode versions:set -DnewVersion=${{github.ref_name}}
       - name: Publish package
-        run: mvn --no-transfer-progress --batch-mode -X package deploy -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/${{github.repository}}
+        run: mvn --no-transfer-progress --batch-mode deploy -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/${{github.repository}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -937,7 +937,7 @@ The 2.15 doesn't report any breaking changes so its backwards compatible with 2.
                 <version>3.2.1</version>
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
+                        <id>deploy</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>jar-no-fork</goal>
@@ -953,7 +953,7 @@ The 2.15 doesn't report any breaking changes so its backwards compatible with 2.
                 </configuration>
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
+                        <id>deploy</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>jar</goal>
