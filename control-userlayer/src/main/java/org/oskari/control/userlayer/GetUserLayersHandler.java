@@ -10,6 +10,7 @@ import fi.nls.oskari.domain.map.OskariLayer;
 import fi.nls.oskari.domain.map.userlayer.UserLayer;
 import fi.nls.oskari.service.OskariComponentManager;
 import fi.nls.oskari.util.JSONHelper;
+import fi.nls.oskari.util.PropertyUtil;
 import fi.nls.oskari.util.ResponseHelper;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,6 +36,7 @@ public class GetUserLayersHandler extends ActionHandler {
     @Override
     public void handleAction(ActionParameters params) throws ActionException {
         String mapSrs = params.getHttpParam(ActionConstants.PARAM_SRS);
+        String lang = params.getHttpParam(ActionConstants.PARAM_LANGUAGE, PropertyUtil.getDefaultLanguage());
         final JSONObject response = new JSONObject();
         final JSONArray layers = new JSONArray();
         JSONHelper.putValue(response, JSKEY_USERLAYERS, layers);
@@ -43,7 +45,7 @@ public class GetUserLayersHandler extends ActionHandler {
             final List<UserLayer> list = userLayerService.getUserLayerByUuid(user.getUuid());
             for (UserLayer ul : list) {
                 // Parse userlayer data to userlayer
-                final JSONObject userLayer = UserLayerDataService.parseUserLayer2JSON(ul, mapSrs);
+                final JSONObject userLayer = UserLayerDataService.parseUserLayer2JSON(ul, mapSrs, lang);
                 JSONObject permissions = UserLayerHandlerHelper.getPermissions();
                 JSONHelper.putValue(userLayer, "permissions", permissions);
                 layers.put(userLayer);

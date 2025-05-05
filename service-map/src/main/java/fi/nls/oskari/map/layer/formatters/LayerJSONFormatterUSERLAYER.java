@@ -21,6 +21,9 @@ public class LayerJSONFormatterUSERLAYER extends LayerJSONFormatterUSERDATA {
     public JSONObject getJSON(final OskariLayer baseLayer, UserLayer ulayer, String srs, String lang) {
         final JSONObject layerJson = super.getJSON(baseLayer, ulayer, srs, lang);
         JSONHelper.putValue(layerJson, "created", ulayer.getCreated());
+        JSONObject describeLayer = JSONHelper.getJSONObject(layerJson, "describeLayer");
+        JSONHelper.put(describeLayer, "fields", ulayer.getFields());
+        JSONHelper.putValue(layerJson, "created", ulayer.getCreated());
         return layerJson;
     }
 
@@ -31,29 +34,73 @@ public class LayerJSONFormatterUSERLAYER extends LayerJSONFormatterUSERDATA {
     }
 
     @Override
-    protected JSONArray getProperties (UserDataLayer layer, WFSLayerAttributes wfsAttr, String lang) {
+    protected JSONArray getProperties(UserDataLayer layer, WFSLayerAttributes wfsAttr, String lang) {
         UserLayer uLayer = (UserLayer) layer;
         JSONArray fields = uLayer.getFields();
         JSONArray props = new JSONArray();
-        for(int i = 0; i < fields.length(); i++) {
-            JSONObject field = JSONHelper.getJSONObject(fields, i); // {locales: {en}, name, type }
+
+        boolean useLangSpecificIndex = isAnyLangSpecificIndex(fields, lang);
+
+        List<JSONObject> nonIndexedProperties = new ArrayList<>();
+        for (int i = 0; i < fields.length(); i++) {
+            JSONObject field = JSONHelper.getJSONObject(fields, i); // {locales: {en, ...}, index: {}, format: {}, name, type }
             JSONObject prop = new JSONObject();
+
+            int idx = useLangSpecificIndex ? getIndex(field, lang) : getDefaultIndex(field);
+            String name = field.optString("name");
             String rawType = field.optString("type");
-            JSONHelper.putValue(prop, "name", field.optString("name"));
+
+            JSONHelper.putValue(prop, "name", name);
             JSONHelper.putValue(prop, "rawType", rawType);
             JSONHelper.putValue(prop, "type", WFSConversionHelper.getSimpleType(rawType));
-            JSONHelper.putValue(prop, "label", getLabel(field));
-            props.put(prop);
+            JSONHelper.putValue(prop, "label", getLabel(field, lang, name));
+            JSONHelper.putValue(prop, "hidden", idx < 0);
+            JSONHelper.putValue(prop, "format", field.optJSONObject("format"));
+
+            if (idx >= 0) {
+                props.put(idx, prop);
+            } else {
+                nonIndexedProperties.add(prop);
+            }
         }
+        nonIndexedProperties.forEach(props::put);
+
         return props;
     }
-    private String getLabel (JSONObject field) {
+
+    private static String getLabel(JSONObject field, String lang, String name) {
         JSONObject locales = field.optJSONObject("locales");
         if (locales == null) {
-            return null;
+            return name;
         }
-        // For now UserLayerDataService.parseFields() adds only "en" localization
-        return locales.optString("en", null);
+        return locales.optString(lang, name);
+    }
+
+    private static boolean isAnyLangSpecificIndex(JSONArray fields, String lang) {
+        for (int i = 0; i < fields.length(); i++) {
+            JSONObject field = JSONHelper.getJSONObject(fields, i);
+            JSONObject index = field.optJSONObject("index");
+            if (index != null && index.optInt(lang, -1) > -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static int getIndex(JSONObject field, String lang) {
+        JSONObject index = field.optJSONObject("index");
+        if (index == null) {
+            return -1;
+        }
+        return index.optInt(lang, -1);
+    }
+
+    private static int getDefaultIndex(JSONObject field) {
+        JSONObject index = field.optJSONObject("index");
+        if (index == null) {
+            return -1;
+        }
+        return index.optInt("default", -1);
     }
 
     // parse fields like WFSLayerAttributes

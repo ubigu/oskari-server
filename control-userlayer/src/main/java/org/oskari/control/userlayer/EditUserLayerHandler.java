@@ -2,7 +2,6 @@ package org.oskari.control.userlayer;
 
 import fi.nls.oskari.control.*;
 import fi.nls.oskari.domain.map.wfs.WFSLayerOptions;
-import fi.nls.oskari.util.PropertyUtil;
 import org.oskari.log.AuditLog;
 import org.json.JSONObject;
 
@@ -10,6 +9,7 @@ import fi.nls.oskari.annotation.OskariActionRoute;
 import fi.nls.oskari.domain.map.userlayer.UserLayer;
 import fi.nls.oskari.service.OskariComponentManager;
 import fi.nls.oskari.util.JSONHelper;
+import fi.nls.oskari.util.PropertyUtil;
 import fi.nls.oskari.util.ResponseHelper;
 import org.oskari.map.userlayer.service.UserLayerDataService;
 import org.oskari.map.userlayer.service.UserLayerDbService;
@@ -23,6 +23,7 @@ public class EditUserLayerHandler extends RestActionHandler {
 
     private static final String PARAM_LOCALE = "locale";
     private static final String PARAM_STYLE = "style";
+    private static final String PARAM_FIELDS = "fields";
 
     private UserLayerDbService userLayerDbService;
 
@@ -34,9 +35,11 @@ public class EditUserLayerHandler extends RestActionHandler {
     @Override
     public void handlePost(ActionParameters params) throws ActionException {
         String mapSrs = params.getHttpParam(ActionConstants.PARAM_SRS);
+        String lang = params.getHttpParam(ActionConstants.PARAM_LANGUAGE, PropertyUtil.getDefaultLanguage());
         final UserLayer userLayer = UserLayerHandlerHelper.getUserLayer(userLayerDbService, params);
         JSONObject payload = params.getPayLoadJSON();
         userLayer.setLocale(JSONHelper.getJSONObject(payload, PARAM_LOCALE));
+        userLayer.setFields(JSONHelper.getJSONArray(payload, PARAM_FIELDS));
         WFSLayerOptions wfsOptions = userLayer.getWFSLayerOptions();
         wfsOptions.setDefaultFeatureStyle(JSONHelper.getJSONObject(payload, PARAM_STYLE));
         try {
@@ -49,7 +52,7 @@ public class EditUserLayerHandler extends RestActionHandler {
                 .withParam("id", userLayer.getId())
                 .updated(AuditLog.ResourceType.USERLAYER);
 
-        JSONObject ulayer = UserLayerDataService.parseUserLayer2JSON(userLayer, mapSrs);
+        JSONObject ulayer = UserLayerDataService.parseUserLayer2JSON(userLayer, mapSrs, lang);
         JSONObject permissions = UserLayerHandlerHelper.getPermissions();
         JSONHelper.putValue(ulayer, "permissions", permissions);
 
