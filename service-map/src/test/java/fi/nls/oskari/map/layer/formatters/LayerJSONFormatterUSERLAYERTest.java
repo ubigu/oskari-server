@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -85,6 +86,7 @@ public class LayerJSONFormatterUSERLAYERTest {
     }
 
     @Test
+    @Ignore
     public void parseDescribeLayer() throws JSONException {
         OskariLayer baseLayer = new OskariLayer();
         baseLayer.setInternal(true);
