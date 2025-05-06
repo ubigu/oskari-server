@@ -7,6 +7,7 @@ import fi.nls.oskari.domain.map.wfs.WFSLayerAttributes;
 import fi.nls.oskari.util.JSONHelper;
 import fi.nls.oskari.util.WFSConversionHelper;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -58,7 +59,11 @@ public class LayerJSONFormatterUSERLAYER extends LayerJSONFormatterUSERDATA {
             JSONHelper.putValue(prop, "format", field.optJSONObject("format"));
 
             if (idx >= 0) {
-                props.put(idx, prop);
+                try {
+                    props.put(idx, prop);
+                } catch (JSONException ignore) {
+                    // This should never happen
+                }
             } else {
                 nonIndexedProperties.add(prop);
             }
